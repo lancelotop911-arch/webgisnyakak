@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desa Kedungcangkring - Profil & Warisan</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .hero-gradient {
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1628624747186-a941c476b7ef?auto=format&fit=crop&q=80&w=1600');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .map-container { position: relative; width: 100%; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 1rem; }
+        .map-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+        .batik-pattern {
+            background-color: #f8fafc;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2310b981' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        /* Edit Mode Styles */
+        .editable-active {
+            border: 2px dashed #10b981; /* Garis putus-putus hijau */
+            padding: 4px;
+            border-radius: 4px;
+            background-color: rgba(16, 185, 129, 0.1);
+            cursor: text;
+            min-height: 1.5em; /* Memastikan elemen kosong tetap bisa diklik */
+        }
+        .editable-active:focus {
+            outline: none;
+            background-color: white;
+            border-color: #059669;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+            z-index: 10;
+            position: relative;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-emerald-700 rounded-lg flex items-center justify-center text-white font-bold shadow-lg">K</div>
+                    <div class="leading-tight">
+                        <span class="block text-lg font-bold text-emerald-800">Kedungcangkring</span>
+                        <span class="block text-xs text-slate-500 font-medium">Jabon, Sidoarjo</span>
+                    </div>
+                </div>
+                <div class="hidden md:flex space-x-8 text-sm font-medium">
+                    <a href="#beranda" class="hover:text-emerald-700 transition text-slate-600">Beranda</a>
+                    <a href="#sejarah" class="hover:text-emerald-700 transition text-slate-600">Sejarah</a>
+                    <a href="#pendidikan" class="hover:text-emerald-700 transition text-slate-600">Pendidikan</a>
+                    <a href="#warisan" class="hover:text-emerald-700 transition text-slate-600">Warisan</a>
+                    <a href="#lokasi" class="hover:text-emerald-700 transition text-slate-600">Lokasi</a>
+                </div>
+                <div class="flex items-center">
+                     <!-- Button Placeholder -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ADMIN PANEL -->
+    <div id="admin-panel" class="fixed bottom-4 right-4 z-[100] hidden flex-col gap-2">
+        <div class="bg-slate-800 text-white p-4 rounded-xl shadow-2xl border border-slate-600 w-64">
+            <div class="flex justify-between items-center mb-2 border-b border-slate-600 pb-2">
+                <h4 class="font-bold text-emerald-400">Panel Admin</h4>
+                <span class="text-xs bg-green-900 text-green-300 px-2 py-0.5 rounded-full">Aktif</span>
+            </div>
+            
+            <button onclick="toggleEditMode()" id="btn-edit-mode" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 px-3 rounded mb-2 transition font-medium">
+                ✏️ Edit Konten
+            </button>
+            <button onclick="saveContent()" id="btn-save" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm py-2 px-3 rounded mb-2 hidden transition font-medium shadow-lg shadow-emerald-900/50">
+                💾 Simpan Perubahan
+            </button>
+            <button onclick="resetData()" class="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs py-1 px-3 rounded mb-2 transition">
+                ↻ Reset ke Default
+            </button>
+            <button onclick="logout()" class="w-full bg-slate-700 hover:bg-red-600 text-white text-sm py-2 px-3 rounded transition mt-2">
+                Keluar
+            </button>
+        </div>
+    </div>
+
+    <!-- KONTEN WEBSITE -->
+
+    <!-- Hero Section -->
+    <section id="beranda" class="pt-16">
+        <div class="hero-gradient h-[650px] flex items-center justify-center text-center px-4 relative">
+            <div class="max-w-4xl relative z-10">
+                <span class="inline-block py-1 px-3 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-100 text-sm font-semibold mb-4 backdrop-blur-sm">
+                    Kecamatan Jabon, Sidoarjo
+                </span>
+                <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-6 leading-tight drop-shadow-lg" data-key="hero_title">
+                    Saksi Bisu Peradaban <br><span class="text-emerald-400">Kuto Delta</span>
+                </h1>
+                <p class="text-lg text-slate-100 mb-8 font-light max-w-2xl mx-auto leading-relaxed" data-key="hero_desc">
+                    Menyimpan jejak perdagangan masa lalu, pusat syiar agama Islam, hingga menjadi legenda Batik Tulis yang mendunia.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <a href="#sejarah" class="bg-emerald-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition shadow-lg">Pelajari Sejarah</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Highlights/Stats Section -->
+    <section class="max-w-7xl mx-auto px-4 -mt-20 relative z-20">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="glass-card p-8 rounded-2xl shadow-xl border border-slate-100 flex items-start space-x-4">
+                <div class="bg-emerald-100 p-3 rounded-lg text-emerald-600">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800" data-key="stat1_title">Sejak 1800-an</h3>
+                    <p class="text-slate-500 text-sm mt-1" data-key="stat1_desc">Salah satu permukiman tertua dengan teknologi modern pada masanya.</p>
+                </div>
+            </div>
+            <div class="glass-card p-8 rounded-2xl shadow-xl border border-slate-100 flex items-start space-x-4">
+                <div class="bg-emerald-100 p-3 rounded-lg text-emerald-600">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800" data-key="stat2_title">Pusat Pesantren</h3>
+                    <p class="text-slate-500 text-sm mt-1" data-key="stat2_desc">Basis dakwah dan pendidikan Islam di wilayah Jabon.</p>
+                </div>
+            </div>
+            <div class="glass-card p-8 rounded-2xl shadow-xl border border-slate-100 flex items-start space-x-4">
+                <div class="bg-emerald-100 p-3 rounded-lg text-emerald-600">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800" data-key="stat3_title">Top 10 Sido Resik</h3>
+                    <p class="text-slate-500 text-sm mt-1" data-key="stat3_desc">Penghargaan desa terbaik dalam menjaga lingkungan (2023).</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SEJARAH Section -->
+    <section id="sejarah" class="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4" data-key="history_main_title">Jejak Sejarah</h2>
+            <div class="w-24 h-1 bg-emerald-500 mx-auto rounded-full"></div>
+            <p class="text-slate-600 mt-6 max-w-2xl mx-auto" data-key="history_main_desc">Kedungcangkring bukan sekadar wilayah administratif, melainkan kota lawas yang menjadi titik temu budaya dan inovasi.</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div class="space-y-8">
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 mt-1">
+                        <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold">01</div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-2" data-key="hist1_title">Kota Lawas Kuto Delta</h3>
+                        <p class="text-slate-600 leading-relaxed" data-key="hist1_desc">
+                            Sejak tahun 1800-an, desa ini telah memiliki akses teknologi canggih seperti jaringan telepon dan listrik, menjadikannya salah satu permukiman terpionir di zamannya.
+                        </p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 mt-1">
+                        <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold">02</div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-2" data-key="hist2_title">Pusat Perdagangan Awal</h3>
+                        <p class="text-slate-600 leading-relaxed" data-key="hist2_desc">
+                            Sebagai titik temu berbagai etnis, Kedungcangkring menjadi pusat pasar ramai yang memengaruhi perkembangan ekonomi lokal secara signifikan.
+                        </p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 mt-1">
+                        <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold">03</div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-2" data-key="hist3_title">Jejak KH. Achmad Aruqot</h3>
+                        <p class="text-slate-600 leading-relaxed" data-key="hist3_desc">
+                            Seorang pejuang pengikut Pangeran Diponegoro yang menetap di sini, meletakkan dasar komunitas religius yang kuat.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="relative">
+                <div class="rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
+                    <img src="https://images.unsplash.com/photo-1577717903315-1691ae25ab3f?auto=format&fit=crop&q=80&w=1000" alt="Suasana Klasik" class="w-full h-auto object-cover grayscale hover:grayscale-0 transition duration-500">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROFIL & PENDIDIKAN Section -->
+    <section id="pendidikan" class="py-24 bg-slate-100 batik-pattern">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-12">
+                <div class="max-w-2xl">
+                    <h2 class="text-3xl font-bold text-slate-900" data-key="edu_title">Profil & Pendidikan Islam</h2>
+                    <p class="text-slate-600 mt-4 text-lg" data-key="edu_subtitle">Rumah bagi ulama besar dan lembaga pendidikan bersejarah.</p>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-12">
+                <div class="bg-white p-8 rounded-2xl shadow-sm border-l-4 border-emerald-500">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-2" data-key="ponpes1_name">PP. Roudlotul Muta’allimin</h3>
+                    <p class="text-sm text-slate-500 mb-4" data-key="ponpes1_meta">Didirikan ±1965 oleh KH. Ach. Aruqot</p>
+                    <p class="text-slate-700" data-key="ponpes1_desc">
+                        Basis dakwah utama di Jabon yang diteruskan oleh tokoh seperti KH. Imron Rofi'i. Mencetak generasi santri yang berilmu dan berakhlak.
+                    </p>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-sm border-l-4 border-emerald-500">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-2" data-key="ponpes2_name">PP. Al Hikmah Al Hidayah</h3>
+                    <p class="text-sm text-slate-500 mb-4" data-key="ponpes2_meta">Dusun Magersari, Sejak 1975</p>
+                    <p class="text-slate-700" data-key="ponpes2_desc">
+                        Didirikan oleh KH. Ali Mas'ud dan KH. Siroj Kholil. Dikenal sebagai pusat pendalaman ilmu agama dengan ulama yang karismatik.
+                    </p>
+                </div>
+            </div>
+
+            <div class="bg-emerald-900 rounded-3xl p-8 md:p-12 text-white relative overflow-hidden">
+                <div class="relative z-10">
+                    <h3 class="text-2xl font-bold mb-6" data-key="tokoh_header">Tokoh & Ulama Kunci</h3>
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <div>
+                            <h4 class="font-bold text-emerald-300 text-lg" data-key="tokoh1_name">KH. Bakri & KH. Hayyun</h4>
+                            <p class="text-emerald-100 text-sm mt-2" data-key="tokoh1_desc">Pembangun fondasi pendidikan Islam dan pencetak generasi penerus.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-emerald-300 text-lg" data-key="tokoh2_name">KH. Siroj</h4>
+                            <p class="text-emerald-100 text-sm mt-2" data-key="tokoh2_desc">Tokoh penting dalam pengembangan pesantren dan spiritualitas warga.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-emerald-300 text-lg" data-key="tokoh3_name">Mbah Ning Riwati</h4>
+                            <p class="text-emerald-100 text-sm mt-2" data-key="tokoh3_desc">Sosok wanita sholihah, ibunda dari ulama besar KH. M. Basori Alwi.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-emerald-800 rounded-full opacity-50"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- WARISAN Section -->
+    <section id="warisan" class="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl font-bold text-slate-900" data-key="heritage_title">Warisan Budaya & Kearifan Lokal</h2>
+            <p class="text-slate-500 mt-2" data-key="heritage_subtitle">Kekayaan tak benda yang diakui dan terus dilestarikan.</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="group bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-100">
+                <div class="h-48 bg-slate-200 overflow-hidden relative">
+                    <img src="https://images.unsplash.com/photo-1598556776374-2c351f79c882?auto=format&fit=crop&q=80&w=800" alt="Batik Tulis" class="w-full h-full object-cover">
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-slate-900 mb-2" data-key="warisan1_title">Batik Tulis Kedungcangkring</h3>
+                    <p class="text-slate-600 text-sm mb-4 line-clamp-4" data-key="warisan1_desc">
+                        Diperkenalkan warga Tionghoa (1940). Memiliki motif khas "Beras Utah" dan "Sisik Melek". Menjadi cikal bakal batik pesisiran di wilayah sekitar.
+                    </p>
+                </div>
+            </div>
+
+            <div class="group bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-100">
+                <div class="h-48 bg-slate-200 overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1604928227694-814bfb9f87c0?auto=format&fit=crop&q=80&w=800" alt="Seni Tradisi" class="w-full h-full object-cover">
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-slate-900 mb-2" data-key="warisan2_title">Seni Tradisional</h3>
+                    <p class="text-slate-600 text-sm mb-4" data-key="warisan2_desc">
+                        Memelihara seni pertunjukan rakyat seperti Kuda Kepang sebagai simbol pelestarian budaya leluhur di tengah modernisasi.
+                    </p>
+                </div>
+            </div>
+
+            <div class="group bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-100">
+                <div class="h-48 bg-slate-200 overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1599939571322-792a326991f2?auto=format&fit=crop&q=80&w=800" alt="Gotong Royong" class="w-full h-full object-cover">
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-slate-900 mb-2" data-key="warisan3_title">Nilai Gotong Royong</h3>
+                    <p class="text-slate-600 text-sm mb-4" data-key="warisan3_desc">
+                        Semangat kebersamaan yang terbukti melalui program SIDO RESIK (Revitalisasi Sungai), menjaga keseimbangan tradisi dan lingkungan.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Maps Section -->
+    <section id="lokasi" class="py-24 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-12 items-center">
+                <div class="md:col-span-1">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-6" data-key="contact_title">Lokasi & Kontak</h2>
+                    <p class="text-slate-600 mb-8" data-key="contact_desc">
+                        Kunjungi desa kami untuk merasakan langsung atmosfer sejarah dan keramahan warga Kedungcangkring.
+                    </p>
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center mr-4 shrink-0 text-emerald-600">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-slate-800">Alamat</p>
+                                <p class="text-sm text-slate-500">Kecamatan Jabon, Kabupaten Sidoarjo, Jawa Timur.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="md:col-span-2">
+                    <div class="shadow-2xl border-4 border-white rounded-2xl overflow-hidden bg-slate-200">
+                        <div class="map-container">
+                            <iframe src="https://www.google.com/maps/d/embed?mid=12H6hsl9PAz90OxAer9ZZw9_EImUA3nE&ehbc=2E312F"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-emerald-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-8">
+                <h3 class="text-white text-lg font-bold mb-2">Desa Kedungcangkring</h3>
+                <p class="text-sm leading-relaxed">&copy; 2024 Pemerintah Desa Kedungcangkring, Sidoarjo.</p>
+            </div>
+            <div class="flex justify-center border-t border-slate-800 pt-8">
+                <button onclick="loginAdmin()" id="btn-login-footer" class="text-xs text-slate-600 hover:text-white transition underline">
+                    Login Admin
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT SYSTEM -->
+    <script>
+        // --- 1. CONFIGURATION & DATA ---
+        const defaultContent = {
+            hero_title: 'Saksi Bisu Peradaban <br><span class="text-emerald-400">Kuto Delta</span>',
+            hero_desc: 'Menyimpan jejak perdagangan masa lalu, pusat syiar agama Islam, hingga menjadi legenda Batik Tulis yang mendunia.',
+            stat1_title: 'Sejak 1800-an',
+            stat1_desc: 'Salah satu permukiman tertua dengan teknologi modern pada masanya.',
+            stat2_title: 'Pusat Pesantren',
+            stat2_desc: 'Basis dakwah dan pendidikan Islam di wilayah Jabon.',
+            stat3_title: 'Top 10 Sido Resik',
+            stat3_desc: 'Penghargaan desa terbaik dalam menjaga lingkungan (2023).',
+            history_main_title: 'Jejak Sejarah',
+            history_main_desc: 'Kedungcangkring bukan sekadar wilayah administratif, melainkan kota lawas yang menjadi titik temu budaya dan inovasi.',
+            hist1_title: 'Kota Lawas Kuto Delta',
+            hist1_desc: 'Sejak tahun 1800-an, desa ini telah memiliki akses teknologi canggih seperti jaringan telepon dan listrik, menjadikannya salah satu permukiman terpionir di zamannya.',
+            hist2_title: 'Pusat Perdagangan Awal',
+            hist2_desc: 'Sebagai titik temu berbagai etnis, Kedungcangkring menjadi pusat pasar ramai yang memengaruhi perkembangan ekonomi lokal secara signifikan.',
+            hist3_title: 'Jejak KH. Achmad Aruqot',
+            hist3_desc: 'Seorang pejuang pengikut Pangeran Diponegoro yang menetap di sini, meletakkan dasar komunitas religius yang kuat.',
+            edu_title: 'Profil & Pendidikan Islam',
+            edu_subtitle: 'Rumah bagi ulama besar dan lembaga pendidikan bersejarah.',
+            ponpes1_name: 'PP. Roudlotul Muta’allimin',
+            ponpes1_meta: 'Didirikan ±1965 oleh KH. Ach. Aruqot',
+            ponpes1_desc: 'Basis dakwah utama di Jabon yang diteruskan oleh tokoh seperti KH. Imron Rofi\'i. Mencetak generasi santri yang berilmu dan berakhlak.',
+            ponpes2_name: 'PP. Al Hikmah Al Hidayah',
+            ponpes2_meta: 'Dusun Magersari, Sejak 1975',
+            ponpes2_desc: 'Didirikan oleh KH. Ali Mas\'ud dan KH. Siroj Kholil. Dikenal sebagai pusat pendalaman ilmu agama dengan ulama yang karismatik.',
+            tokoh_header: 'Tokoh & Ulama Kunci',
+            tokoh1_name: 'KH. Bakri & KH. Hayyun',
+            tokoh1_desc: 'Pembangun fondasi pendidikan Islam dan pencetak generasi penerus.',
+            tokoh2_name: 'KH. Siroj',
+            tokoh2_desc: 'Tokoh penting dalam pengembangan pesantren dan spiritualitas warga.',
+            tokoh3_name: 'Mbah Ning Riwati',
+            tokoh3_desc: 'Sosok wanita sholihah, ibunda dari ulama besar KH. M. Basori Alwi.',
+            heritage_title: 'Warisan Budaya & Kearifan Lokal',
+            heritage_subtitle: 'Kekayaan tak benda yang diakui dan terus dilestarikan.',
+            warisan1_title: 'Batik Tulis Kedungcangkring',
+            warisan1_desc: 'Diperkenalkan warga Tionghoa (1940). Memiliki motif khas "Beras Utah" dan "Sisik Melek". Menjadi cikal bakal batik pesisiran di wilayah sekitar.',
+            warisan2_title: 'Seni Tradisional',
+            warisan2_desc: 'Memelihara seni pertunjukan rakyat seperti Kuda Kepang sebagai simbol pelestarian budaya leluhur di tengah modernisasi.',
+            warisan3_title: 'Nilai Gotong Royong',
+            warisan3_desc: 'Semangat kebersamaan yang terbukti melalui program SIDO RESIK (Revitalisasi Sungai), menjaga keseimbangan tradisi dan lingkungan.',
+            contact_title: 'Lokasi & Kontak',
+            contact_desc: 'Kunjungi desa kami untuk merasakan langsung atmosfer sejarah dan keramahan warga Kedungcangkring.'
+        };
+
+        // Variable global state
+        let contentData = {};
+        let isEditMode = false;
+        let isAdmin = false;
+
+        // --- 2. CORE FUNCTIONS ---
+
+        // Fungsi Load Data (Penting!)
+        function loadContent() {
+            try {
+                const stored = localStorage.getItem('desaContent');
+                if (stored) {
+                    contentData = JSON.parse(stored);
+                } else {
+                    contentData = {...defaultContent}; // Kloning object
+                }
+            } catch (e) {
+                console.error("Gagal load data", e);
+                contentData = {...defaultContent};
+            }
+            renderContent();
+        }
+
+        // Fungsi Render ke HTML
+        function renderContent() {
+            for (const [key, value] of Object.entries(contentData)) {
+                const element = document.querySelector(`[data-key="${key}"]`);
+                if (element) {
+                    element.innerHTML = value;
+                }
+            }
+        }
+
+        // Jalankan saat pertama kali buka
+        document.addEventListener('DOMContentLoaded', () => {
+            loadContent();
+            checkLoginStatus();
+        });
+
+        // --- 3. AUTHENTICATION ---
+
+        function loginAdmin() {
+            Swal.fire({
+                title: 'Login Admin',
+                html: `<input type="text" id="swal-input1" class="swal2-input" placeholder="Username">
+                       <input type="password" id="swal-input2" class="swal2-input" placeholder="Password">`,
+                focusConfirm: false,
+                preConfirm: () => {
+                    const user = document.getElementById('swal-input1').value;
+                    const pass = document.getElementById('swal-input2').value;
+                    if (user === 'admin' && pass === 'admin123') {
+                        return true;
+                    } else {
+                        Swal.showValidationMessage('Username atau Password salah');
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    isAdmin = true;
+                    localStorage.setItem('isAdmin', 'true');
+                    updateAdminUI();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil Login',
+                        text: 'Selamat datang Admin!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            });
+        }
+
+        function logout() {
+            isAdmin = false;
+            isEditMode = false;
+            localStorage.removeItem('isAdmin');
+            disableEditMode(); // Matikan edit mode visual
+            renderContent(); // Kembalikan konten jika ada yg belum tersimpan
+            updateAdminUI();
+            updateButtonState();
+            Swal.fire('Logout', 'Anda telah keluar.', 'info');
+        }
+
+        function checkLoginStatus() {
+            if (localStorage.getItem('isAdmin') === 'true') {
+                isAdmin = true;
+                updateAdminUI();
+            }
+        }
+
+        function updateAdminUI() {
+            const panel = document.getElementById('admin-panel');
+            const loginBtn = document.getElementById('btn-login-footer');
+            
+            if (isAdmin) {
+                panel.classList.remove('hidden');
+                panel.classList.add('flex');
+                loginBtn.textContent = "Status: Logged In";
+                loginBtn.disabled = true;
+                loginBtn.classList.remove('underline', 'hover:text-white');
+                loginBtn.classList.add('text-emerald-500');
+            } else {
+                panel.classList.add('hidden');
+                panel.classList.remove('flex');
+                loginBtn.textContent = "Login Admin";
+                loginBtn.disabled = false;
+                loginBtn.classList.add('underline', 'hover:text-white');
+                loginBtn.classList.remove('text-emerald-500');
+            }
+        }
+
+        // --- 4. EDIT MODE LOGIC (DIPERBAIKI) ---
+
+        function toggleEditMode() {
+            if (isEditMode) {
+                // Jika sedang edit dan user klik tombol "Batal/Tutup"
+                isEditMode = false;
+                disableEditMode();
+                loadContent(); // Kembalikan ke data terakhir yang tersimpan (Reset tampilan)
+                Swal.fire('Mode Edit Ditutup', 'Perubahan yang belum disimpan telah dibatalkan.', 'info');
+            } else {
+                // Aktifkan mode edit
+                isEditMode = true;
+                enableEditMode();
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Mode Edit Aktif',
+                    text: 'Klik teks untuk mengubahnya',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }
+            updateButtonState();
+        }
+
+        function enableEditMode() {
+            const editableElements = document.querySelectorAll('[data-key]');
+            editableElements.forEach(el => {
+                el.contentEditable = "true";
+                el.classList.add('editable-active');
+            });
+        }
+
+        function disableEditMode() {
+            const editableElements = document.querySelectorAll('[data-key]');
+            editableElements.forEach(el => {
+                el.contentEditable = "false";
+                el.classList.remove('editable-active');
+            });
+        }
+
+        function updateButtonState() {
+            const btnEdit = document.getElementById('btn-edit-mode');
+            const btnSave = document.getElementById('btn-save');
+            
+            if (isEditMode) {
+                btnEdit.textContent = "❌ Batal Edit";
+                btnEdit.classList.replace('bg-blue-600', 'bg-slate-500');
+                btnSave.classList.remove('hidden');
+            } else {
+                btnEdit.textContent = "✏️ Edit Konten";
+                btnEdit.classList.replace('bg-slate-500', 'bg-blue-600');
+                btnSave.classList.add('hidden');
+            }
+        }
+
+        // --- 5. SAVE LOGIC (DIPERBAIKI) ---
+
+        function saveContent() {
+            // 1. Loop dan update variable global DULU
+            const editableElements = document.querySelectorAll('[data-key]');
+            editableElements.forEach(el => {
+                const key = el.getAttribute('data-key');
+                // Hati-hati: innerHTML mengambil tag HTML juga (seperti <br>)
+                contentData[key] = el.innerHTML; 
+            });
+
+            // 2. Simpan ke LocalStorage
+            try {
+                localStorage.setItem('desaContent', JSON.stringify(contentData));
+                
+                // 3. Matikan mode edit SECARA MANUAL tanpa me-reload konten lama
+                isEditMode = false;
+                disableEditMode();
+                updateButtonState();
+                
+                // 4. Beri notifikasi
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Tersimpan!',
+                    text: 'Perubahan konten berhasil disimpan di browser ini.',
+                    confirmButtonColor: '#059669'
+                });
+                
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'Gagal menyimpan data. Pastikan LocalStorage aktif.', 'error');
+            }
+        }
+
+        function resetData() {
+            Swal.fire({
+                title: 'Reset Data?',
+                text: "Semua perubahan akan hilang dan kembali ke teks asli!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Reset!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem('desaContent');
+                    loadContent(); // Reload default
+                    Swal.fire('Direset!', 'Konten telah dikembalikan ke awal.', 'success');
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>
